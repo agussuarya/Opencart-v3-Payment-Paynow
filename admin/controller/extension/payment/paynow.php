@@ -18,62 +18,83 @@ class ControllerExtensionPaymentPayNow extends Controller {
             $this->response->redirect($this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true));
         }
 
-        $data['heading_title'] = $this->language->get('heading_title');
-
-        $data['entry_text_config_one'] = $this->language->get('text_config_one');
-        $data['entry_text_config_two'] = $this->language->get('text_config_two');
-        $data['entry_order_status'] = $this->language->get('entry_order_status');
-        $data['entry_status'] = $this->language->get('entry_status');
-
-        $data['button_save'] = $this->language->get('text_button_save');
-        $data['button_cancel'] = $this->language->get('text_button_cancel');
-
-        $data['text_enabled'] = $this->language->get('text_enabled');
-        $data['text_disabled'] = $this->language->get('text_disabled');
-
-        $data['action'] = $this->url->link('extension/payment/paynow', 'user_token=' . $this->session->data['user_token'], true);
-        $data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true);
-
-        $data['breadcrumbs'] = array();
-        $data['breadcrumbs'][] = array(
-            'text' => $this->language->get('text_home'),
-            'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)
-        );
-        $data['breadcrumbs'][] = array(
-            'text' => $this->language->get('text_extension'),
-            'href' => $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true)
-        );
-        $data['breadcrumbs'][] = array(
-            'text' => $this->language->get('heading_title'),
-            'href' => $this->url->link('extension/payment/paynow', 'user_token=' . $this->session->data['user_token'], true)
-        );
-
-        if (isset($this->request->post['payment_paynow_text_config_one'])) {
-            $data['payment_paynow_text_config_one'] = $this->request->post['payment_paynow_text_config_one'];
-        } else {
-            $data['payment_paynow_text_config_one'] = $this->config->get('payment_paynow_text_config_one');
-        }
-
-        if (isset($this->request->post['payment_paynow_text_config_two'])) {
-            $data['payment_paynow_text_config_two'] = $this->request->post['payment_paynow_text_config_two'];
-        } else {
-            $data['payment_paynow_text_config_two'] = $this->config->get('payment_paynow_text_config_two');
-        }
-
-        if (isset($this->request->post['payment_paynow_status'])) {
-            $data['payment_paynow_status'] = $this->request->post['payment_paynow_status'];
-        } else {
-            $data['payment_paynow_status'] = $this->config->get('payment_paynow_status');
-        }
-
-        if (isset($this->request->post['payment_paynow_order_status_id'])) {
-            $data['payment_paynow_order_status_id'] = $this->request->post['payment_paynow_order_status_id'];
-        } else {
-            $data['payment_paynow_order_status_id'] = $this->config->get('payment_paynow_order_status_id');
-        }
-
         $this->load->model('localisation/order_status');
         $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
+
+        $data['heading_title'] = $this->language->get('heading_title');
+
+        $data['action'] = $this->url->link('extension/payment/paynow', 'user_token=' . $this->session->data['user_token'], true);
+
+        $data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true);
+
+        $data['breadcrumbs'] = [
+            [
+                'text' => $this->language->get('text_home'),
+                'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true),
+            ],
+            [
+                'text' => $this->language->get('text_extension'),
+                'href' => $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true)
+            ],
+            [
+                'text' => $this->language->get('heading_title'),
+                'href' => $this->url->link('extension/payment/paynow', 'user_token=' . $this->session->data['user_token'], true)
+            ]
+        ];
+
+        // Config status
+        if (isset($this->request->post['payment_paynow_status'])) {
+            $data['payment_paynow_status'] = $this->request->post['payment_paynow_status'];
+        } else if($this->config->has('payment_paynow_status')){
+            $data['payment_paynow_status'] = $this->config->get('payment_paynow_status');
+        } else {
+            $data['payment_paynow_status'] = 0;
+        }
+
+        // Config order success status
+        if (isset($this->request->post['payment_paynow_order_success_status_id'])) {
+            $data['payment_paynow_order_success_status_id'] = $this->request->post['payment_paynow_order_success_status_id'];
+        } else if($this->config->has('payment_paynow_order_success_status_id')){
+            $data['payment_paynow_order_success_status_id'] = $this->config->get('payment_paynow_order_success_status_id');
+        } else {
+            $data['payment_paynow_order_success_status_id'] = '';
+        }
+
+        // Config order failed status
+        if (isset($this->request->post['payment_paynow_order_failed_status_id'])) {
+            $data['payment_paynow_order_failed_status_id'] = $this->request->post['payment_paynow_order_failed_status_id'];
+        } else if($this->config->has('payment_paynow_order_failed_status_id')){
+            $data['payment_paynow_order_failed_status_id'] = $this->config->get('payment_paynow_order_failed_status_id');
+        } else {
+            $data['payment_paynow_order_failed_status_id'] = '';
+        }
+
+        // Config sort order
+        if (isset($this->request->post['payment_paynow_sort_order'])) {
+            $data['payment_paynow_sort_order'] = $this->request->post['payment_paynow_sort_order'];
+        } else if($this->config->has('payment_paynow_sort_order')){
+            $data['payment_paynow_sort_order'] = (int)$this->config->get('payment_paynow_sort_order');
+        } else {
+            $data['payment_paynow_sort_order'] = 0;
+        }
+
+        // Config text one
+        if (isset($this->request->post['payment_paynow_config_one'])) {
+            $data['payment_paynow_config_one'] = $this->request->post['payment_paynow_config_one'];
+        } else if($this->config->has('payment_paynow_config_one')){
+            $data['payment_paynow_config_one'] = $this->config->get('payment_paynow_config_one');
+        } else {
+            $data['payment_paynow_config_one'] = '';
+        }
+
+        // Config text two
+        if (isset($this->request->post['payment_paynow_config_two'])) {
+            $data['payment_paynow_config_two'] = $this->request->post['payment_paynow_config_two'];
+        } else if($this->config->has('payment_paynow_config_two')){
+            $data['payment_paynow_config_two'] = $this->config->get('payment_paynow_config_two');
+        } else {
+            $data['payment_paynow_config_two'] = '';
+        }
 
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
