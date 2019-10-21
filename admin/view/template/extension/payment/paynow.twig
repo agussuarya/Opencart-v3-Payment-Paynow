@@ -37,6 +37,22 @@
                         </div>
                     </div>
                     <div class="form-group required">
+                        <label class="control-label col-sm-3" for="payment_paynow_debug">
+                            <span data-toggle="tooltip" title="{{ entry_debug_help }}">{{ entry_debug }}</span>
+                        </label>
+                        <div class="col-sm-9">
+                            <select name="payment_paynow_debug" id="payment_paynow_debug" class="form-control">
+                                {% if payment_paynow_debug %}
+                                    <option value="1" selected="selected">{{ text_enabled }}</option>
+                                    <option value="0">{{ text_disabled }}</option>
+                                {% else %}
+                                    <option value="1">{{ text_enabled }}</option>
+                                    <option value="0" selected="selected">{{ text_disabled }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group required">
                         <label class="control-label col-sm-3" for="payment_paynow_order_success_status_id">
                             <span data-toggle="tooltip" title="{{ entry_order_success_status_help }}">{{ entry_order_success_status }}</span>
                         </label>

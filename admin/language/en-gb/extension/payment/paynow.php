@@ -10,6 +10,9 @@ $_['text_paynow']		 = '<img src="view/image/payment/paynow.png" alt="Paynow" tit
 $_['entry_status'] = 'Status';
 $_['entry_status_help'] = 'Enable this to accept payment using Paynow';
 
+$_['entry_debug'] = 'Debug';
+$_['entry_debug_help'] = 'Enable this will write Paynow Payment logs to help you finding any issue';
+
 $_['entry_order_success_status'] = 'Order Success Status';
 $_['entry_order_success_status_help'] = 'Order status that will set for Successful Payment';
 
