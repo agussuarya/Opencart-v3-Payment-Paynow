@@ -1,0 +1,10 @@
+.paynowBarcodeWrapper {
+    border: 1px solid #ddd;
+    height: 250px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.paynowBarcodeWrapper #barcode {
+    background: url(../image/Spinner-1s-200px.gif) 50% no-repeat;
+}

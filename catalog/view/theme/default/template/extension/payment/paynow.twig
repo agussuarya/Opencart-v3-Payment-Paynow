@@ -1,3 +1,6 @@
+<h2>{{ text_instruction }}</h2>
+<p>{{ text_description }}</p>
+
 <form action="{{ action }}" method="post">
     <input type="hidden" name="text_config_one" value="{{ text_config_one }}" />
     <input type="hidden" name="text_config_two" value="{{ text_config_two }}" />
@@ -22,9 +25,41 @@
     <input type="hidden" name="deliveryphone" value="{{ deliveryphone }}" />
     <input type="hidden" name="deliverypost" value="{{ deliverypost }}" />
 
+    <div class="paynowBarcodeWrapper">
+        <img id='barcode'
+             src="https://api.qrserver.com/v1/create-qr-code/?data={{ barcode_paynow }}&amp;size=200x200"
+             alt="Scan this barcode to pay"
+             title="Scan this barcode to pay"
+             width="200"
+             height="200" />
+    </div>
+
     <div class="buttons">
         <div class="pull-right">
-            <input type="submit" value="{{ button_confirm }}" class="btn btn-primary">
+            <input type="button" value="{{ button_confirm }}" id="button-confirm" data-loading-text="{{ text_loading }}" class="btn btn-primary" />
         </div>
     </div>
 </form>
+
+<script type="text/javascript">
+    $('#button-confirm').on('click', function() {
+        $.ajax({
+            url: 'index.php?route=extension/payment/paynow/confirm',
+            dataType: 'json',
+            beforeSend: function() {
+                $('#button-confirm').button('loading');
+            },
+            complete: function() {
+                $('#button-confirm').button('reset');
+            },
+            success: function(json) {
+                if (json['redirect']) {
+                    location = json['redirect'];
+                }
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        });
+    });
+</script>
