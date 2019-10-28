@@ -60,6 +60,15 @@ class ControllerExtensionPaymentPayNow extends Controller {
             $data['payment_paynow_debug'] = 0;
         }
 
+        // Config order init status
+        if (isset($this->request->post['payment_paynow_order_init_status_id'])) {
+            $data['payment_paynow_order_init_status_id'] = $this->request->post['payment_paynow_order_init_status_id'];
+        } else if($this->config->has('payment_paynow_order_init_status_id')){
+            $data['payment_paynow_order_init_status_id'] = $this->config->get('payment_paynow_order_init_status_id');
+        } else {
+            $data['payment_paynow_order_init_status_id'] = '';
+        }
+
         // Config order success status
         if (isset($this->request->post['payment_paynow_order_success_status_id'])) {
             $data['payment_paynow_order_success_status_id'] = $this->request->post['payment_paynow_order_success_status_id'];

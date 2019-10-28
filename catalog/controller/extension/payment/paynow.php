@@ -102,7 +102,7 @@ class ControllerExtensionPaymentPayNow extends Controller {
             $comment .= "<img id='barcode' src='https://api.qrserver.com/v1/create-qr-code/?data=xxx&amp;size=100x100' alt='Scan this barcode to pay' title='Scan this barcode to pay' width='100' height='100' />\n\n";
             $comment .= $this->language->get('text_payment');
 
-            $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $this->config->get('payment_paynow_order_success_status_id'), $comment, true);
+            $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $this->config->get('payment_paynow_order_init_status_id'), $comment, true);
 
             $json['redirect'] = $this->url->link('checkout/success');
         }
