@@ -6,5 +6,5 @@
     align-items: center;
 }
 .paynowBarcodeWrapper #barcode {
-    background: url(../image/Spinner-1s-200px.gif) 50% no-repeat;
+    background: url(../image/paynow_loading.gif) 50% no-repeat;
 }
