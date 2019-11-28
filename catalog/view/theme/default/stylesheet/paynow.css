@@ -8,3 +8,7 @@
 .paynowBarcodeWrapper #barcode {
     background: url(../image/paynow_loading.gif) 50% no-repeat;
 }
+
+.textDescriptionWrapper p {
+    margin: 10px;
+}
