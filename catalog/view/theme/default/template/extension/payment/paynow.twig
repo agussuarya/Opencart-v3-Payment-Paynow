@@ -1,6 +1,9 @@
 <link rel="stylesheet" type="text/css" href="{{ store_url }}catalog/view/theme/default/stylesheet/paynow.css">
 <h2>{{ text_instruction }}</h2>
-<p>{{ text_description }}</p>
+
+<div class="well well-sm textDescriptionWrapper">
+    <p class="mb-0">{{ text_description }}</p>
+</div>
 
 <form action="{{ action }}" method="post">
     <input type="hidden" name="text_config_one" value="{{ text_config_one }}" />
@@ -26,15 +29,6 @@
     <input type="hidden" name="deliveryphone" value="{{ deliveryphone }}" />
     <input type="hidden" name="deliverypost" value="{{ deliverypost }}" />
 
-    <div class="paynowBarcodeWrapper">
-        <img id='barcode'
-             src="https://api.qrserver.com/v1/create-qr-code/?data={{ barcode_paynow }}&amp;size=200x200"
-             alt="Scan this barcode to pay"
-             title="Scan this barcode to pay"
-             width="200"
-             height="200" />
-    </div>
-
     <div class="buttons">
         <div class="pull-right">
             <input type="button" value="{{ button_confirm }}" id="button-confirm" data-loading-text="{{ text_loading }}" class="btn btn-primary" />
@@ -52,11 +46,16 @@
             },
             complete: function() {
                 $('#button-confirm').button('reset');
+                $('#button-confirm').data('loading-text', 'Generating paynow QR Code...');
+                $('#button-confirm').button('loading');
             },
             success: function(json) {
-                if (json['redirect']) {
-                    location = json['redirect'];
-                }
+                console.log(json);
+                setTimeout(function() {
+                    if (json['redirect']) {
+                        location = json['redirect'];
+                    }
+                }, 15000);
             },
             error: function(xhr, ajaxOptions, thrownError) {
                 alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
