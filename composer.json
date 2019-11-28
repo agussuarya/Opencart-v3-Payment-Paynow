@@ -1,0 +1,10 @@
+{
+  "require": {
+    "guzzlehttp/guzzle": "~6.0",
+    "ext-json": "*",
+    "aws/aws-sdk-php": "^3.112",
+    "nesbot/carbon": "^2.26",
+    "monolog/monolog": "^1.25",
+    "maxbanton/cwh": "^1.0"
+  }
+}
