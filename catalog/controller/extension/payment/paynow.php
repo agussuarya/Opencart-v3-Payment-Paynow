@@ -1,6 +1,13 @@
 <?php
 
+use Aws\Sns\SnsClient;
+use Carbon\Carbon;
+
 class ControllerExtensionPaymentPayNow extends Controller {
+
+    /**
+     * This function called when customer select payment paynow
+     */
     public function index() {
         $this->language->load('extension/payment/paynow');
 
@@ -11,6 +18,7 @@ class ControllerExtensionPaymentPayNow extends Controller {
         }
 
         $data['button_confirm'] = $this->language->get('button_confirm');
+        $data['text_loading'] = $this->language->get('text_loading');
 
         $data['action'] = 'https://yourpaymentgatewayurl';
 
@@ -62,33 +70,34 @@ class ControllerExtensionPaymentPayNow extends Controller {
             $data['deliveryphone'] = html_entity_decode($order_info['telephone'], ENT_QUOTES, 'UTF-8');
             $data['deliverypost'] = html_entity_decode($order_info['shipping_postcode'], ENT_QUOTES, 'UTF-8');
 
-            // Generate barcode
-            $data['barcode_paynow'] = 'Yasa test';
-
             return $this->load->view( 'extension/payment/paynow', $data );
         }
     }
 
-    public function callback() {
-        if (isset($this->request->post['orderid'])) {
-            $order_id = trim(substr(($this->request->post['orderid']), 6));
-        } else {
-            die('Illegal Access');
-        }
+//    public function callback() {
+//        if (isset($this->request->post['orderid'])) {
+//            $order_id = trim(substr(($this->request->post['orderid']), 6));
+//        } else {
+//            die('Illegal Access');
+//        }
+//
+//        $this->load->model('checkout/order');
+//        $order_info = $this->model_checkout_order->getOrder($order_id);
+//
+//        if ($order_info) {
+//            $data = array_merge($this->request->post,$this->request->get);
+//
+//            //payment was made successfully
+//            if ($data['status'] == 'Y' || $data['status'] == 'y') {
+//                // update the order status accordingly
+//            }
+//        }
+//    }
 
-        $this->load->model('checkout/order');
-        $order_info = $this->model_checkout_order->getOrder($order_id);
 
-        if ($order_info) {
-            $data = array_merge($this->request->post,$this->request->get);
-
-            //payment was made successfully
-            if ($data['status'] == 'Y' || $data['status'] == 'y') {
-                // update the order status accordingly
-            }
-        }
-    }
-
+    /**
+     * This function called when customer select payment paynow & click confirm button
+     */
     public function confirm() {
         $json = array();
 
@@ -96,19 +105,94 @@ class ControllerExtensionPaymentPayNow extends Controller {
             $this->load->language('extension/payment/paynow');
 
             $this->load->model('checkout/order');
+            $this->load->model('extension/payment/paynow');
 
-            $comment  = $this->language->get('text_instruction') . ":\n\n";
-            $comment .= $this->language->get('text_description_order_history') . "\n\n";
-            $comment .= "<img id='barcode' src='https://api.qrserver.com/v1/create-qr-code/?data=xxx&amp;size=100x100' alt='Scan this barcode to pay' title='Scan this barcode to pay' width='100' height='100' />\n\n";
-            $comment .= $this->language->get('text_payment');
+            $comment = $this->language->get('text_description_order_history_1');
 
             $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $this->config->get('payment_paynow_order_init_status_id'), $comment, true);
+            $this->model_extension_payment_paynow->addPendingOrder($this->session->data['order_id']);
 
-            $json['redirect'] = $this->url->link('checkout/success');
+            //$json['redirect'] = $this->url->link('checkout/success');
+            $json['redirect'] = $this->url->link('account/order/info&order_id=' . $this->session->data['order_id']);
+
+            // SNS
+            $this->publishSns();
+
+            // Clear cart and other session
+            $this->checkoutSuccess();
         }
 
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput(json_encode($json));
     }
 
+    /**
+     * Trigger lambda to add sg qr code to order history
+     */
+    private function publishSns()
+    {
+        // Get order info
+        $this->load->model('checkout/order');
+        $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
+        $currency = $order_info['currency_code'];
+        $orderAmount = $this->currency->format($order_info['total'], $currency , false, false);
+
+        require DIR_APP . 'vendor/autoload.php';
+
+        $sns = new SnsClient([
+            'region' => AWS_DEFAULT_REGION, //Change according to you
+            'version' => SNS_VERSION, //Change according to you
+            'credentials' => [
+                'key'    => AWS_ACCESS_KEY_ID,
+                'secret' => AWS_SECRET_ACCESS_KEY,
+            ],
+            'scheme' => 'http', //disables SSL certification, there was an error on enabling it
+        ]);
+        $params = [
+            'Message' => 'example message',
+            'Subject' => 'example subject',
+            'MessageAttributes' => [
+                'orderId' => [
+                    'DataType' => 'Number',
+                    'StringValue' => $this->session->data['order_id'],
+                ],
+                'amount' => [
+                    'DataType' => 'Number',
+                    'StringValue' => $orderAmount,
+                ],
+                'billReferenceNumber' => [
+                    'DataType' => 'String',
+                    'StringValue' => SNS_MESSAGE_ATTRIBUTE_3_PREFIX . '' . $this->session->data['order_id'],
+                ],
+                'expiryDate' => [
+                    'DataType' => 'String',
+                    'StringValue' => Carbon::now()->addDays(2)->format('Ymd'),
+                ]
+            ],
+            'TopicArn' => AWS_SNS_TOPIC_ARN,
+        ];
+
+        $result = $sns->publish($params);
+    }
+
+    /**
+     * Clear all session cart
+     */
+    private function checkoutSuccess()
+    {
+        $this->cart->clear();
+
+        unset($this->session->data['shipping_method']);
+        unset($this->session->data['shipping_methods']);
+        unset($this->session->data['payment_method']);
+        unset($this->session->data['payment_methods']);
+        unset($this->session->data['guest']);
+        unset($this->session->data['comment']);
+        // unset($this->session->data['order_id']);
+        unset($this->session->data['coupon']);
+        unset($this->session->data['reward']);
+        unset($this->session->data['voucher']);
+        unset($this->session->data['vouchers']);
+        unset($this->session->data['totals']);
+    }
 }
